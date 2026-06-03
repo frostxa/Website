@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cyan:#00f5ff;--purple:#a855f7;--pink:#ec4899;--yellow:#facc15;
+  --green:#10b981;--orange:#f97316;--navy:#020414;--navy2:#030618;
+  --glass:rgba(2,4,20,0.85);
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--navy);color:#fff;font-family:'Share Tech Mono',monospace;overflow-x:hidden;cursor:none}
+
+/* Custom cursor */
+#cursor{position:fixed;width:12px;height:12px;background:var(--cyan);image-rendering:pixelated;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width 0.1s,height 0.1s,background 0.2s}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(0,245,255,0.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all 0.08s linear}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:#010310}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--cyan),var(--purple))}
+
+/* Pixel art elements */
+.px-border{
+  border:2px solid transparent;
+  background:
+    linear-gradient(var(--glass),var(--glass)) padding-box,
+    linear-gradient(135deg,var(--cyan),var(--purple),var(--pink)) border-box;
+  image-rendering:pixelated;
+}
+.px-corner{position:absolute;width:8px;height:8px;image-rendering:pixelated}
+.px-corner.tl{top:-1px;left:-1px;border-top:3px solid var(--cyan);border-left:3px solid var(--cyan)}
+.px-corner.tr{top:-1px;right:-1px;border-top:3px solid var(--cyan);border-right:3px solid var(--cyan)}
+.px-corner.bl{bottom:-1px;left:-1px;border-bottom:3px solid var(--cyan);border-left:3px solid var(--cyan)}
+.px-corner.br{bottom:-1px;right:-1px;border-bottom:3px solid var(--cyan);border-right:3px solid var(--cyan)}
+
+.pixel-font{font-family:'Press Start 2P',monospace;line-height:1.6}
+.mono{font-family:'Share Tech Mono',monospace}
+
+/* Neon text */
+.neon-cyan{color:var(--cyan);text-shadow:0 0 10px var(--cyan),0 0 30px rgba(0,245,255,0.4)}
+.neon-purple{color:var(--purple);text-shadow:0 0 10px var(--purple),0 0 30px rgba(168,85,247,0.4)}
+.neon-pink{color:var(--pink);text-shadow:0 0 10px var(--pink),0 0 30px rgba(236,72,153,0.4)}
+.neon-yellow{color:var(--yellow);text-shadow:0 0 10px var(--yellow),0 0 30px rgba(250,204,21,0.3)}
+.grad-text{background:linear-gradient(135deg,var(--cyan),var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 15px rgba(0,245,255,0.3))}
+
+/* NAVBAR */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 32px;transition:all 0.3s;height:60px;display:flex;align-items:center;justify-content:space-between}
+nav.scrolled{background:rgba(2,4,20,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,0.1)}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo-px{width:34px;height:34px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:12px;color:#000;image-rendering:pixelated;clip-path:polygon(0 4px,4px 0,30px 0,34px 4px,34px 30px,30px 34px,4px 34px,0 30px)}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;text-decoration:none;transition:color 0.2s;font-family:'Press Start 2P',monospace}
+.nav-links a:hover{color:var(--cyan);text-shadow:0 0 10px var(--cyan)}
+.btn-order-nav{background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:9px;padding:8px 16px;cursor:pointer;letter-spacing:1px;text-decoration:none;transition:all 0.2s;clip-path:polygon(0 4px,4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px))}
+.btn-order-nav:hover{background:var(--cyan);color:#000;box-shadow:0 0 20px rgba(0,245,255,0.5)}
+
+/* PIXEL CANVAS */
+#pixel-canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* HERO */
+#hero{position:relative;min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.05) 1px,transparent 1px);background-size:40px 40px;z-index:0}
+.hero-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:1}
+.hero-glow-1{position:absolute;top:20%;left:10%;width:500px;height:500px;background:radial-gradient(circle,rgba(168,85,247,0.12),transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
+.hero-glow-2{position:absolute;bottom:20%;right:10%;width:600px;height:600px;background:radial-gradient(circle,rgba(0,245,255,0.08),transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
+.hero-glow-3{position:absolute;top:50%;left:50%;width:800px;height:400px;background:radial-gradient(circle,rgba(236,72,153,0.06),transparent 65%);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0}
+
+.hero-content{position:relative;z-index:2;text-align:center;padding:100px 24px 60px;max-width:1200px;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.25);padding:6px 16px;margin-bottom:28px;font-size:9px;color:var(--cyan);letter-spacing:3px;font-family:'Press Start 2P',monospace;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.hero-badge .dot{width:6px;height:6px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation:blink 1.4s infinite}
+.hero-title{font-family:'Press Start 2P',monospace;font-size:clamp(24px,5vw,60px);line-height:1.4;margin-bottom:12px;letter-spacing:2px}
+.hero-sub{font-family:'Press Start 2P',monospace;font-size:clamp(8px,1.5vw,12px);color:rgba(0,245,255,0.7);letter-spacing:4px;margin-bottom:16px}
+.hero-desc{font-family:'Share Tech Mono',monospace;font-size:clamp(13px,1.8vw,16px);color:rgba(255,255,255,0.45);max-width:520px;margin:0 auto 44px;line-height:1.8}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:60px}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#000;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 24px;text-decoration:none;letter-spacing:1px;cursor:pointer;border:none;transition:all 0.2s;clip-path:polygon(0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px));box-shadow:0 0 20px rgba(0,245,255,0.35)}
+.btn-primary:hover{transform:scale(1.05);box-shadow:0 0 40px rgba(0,245,255,0.6)}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#fff;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 24px;text-decoration:none;letter-spacing:1px;cursor:pointer;border:none;transition:all 0.2s;clip-path:polygon(0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px));box-shadow:0 0 0 1px rgba(255,255,255,0.2) inset}
+.btn-secondary:hover{box-shadow:0 0 0 1px var(--cyan) inset;color:var(--cyan)}
+
+/* FLOATING 3D CARDS */
+.cards-stage{position:relative;height:300px;perspective:1000px;margin-top:20px}
+.float-card{position:absolute;left:50%;top:50%;background:var(--glass);backdrop-filter:blur(12px);border-radius:0;padding:16px;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.2s;image-rendering:pixelated}
+.float-card .fc-icon{font-size:28px;margin-bottom:8px;display:block}
+.float-card .fc-cat{font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;margin-bottom:6px}
+.float-card .fc-title{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;line-height:1.4}
+.fc-pixel-corner{position:absolute;width:6px;height:6px}
+.fc-pixel-corner.tl{top:0;left:0;border-top:2px solid;border-left:2px solid}
+.fc-pixel-corner.tr{top:0;right:0;border-top:2px solid;border-right:2px solid}
+.fc-pixel-corner.bl{bottom:0;left:0;border-bottom:2px solid;border-left:2px solid}
+.fc-pixel-corner.br{bottom:0;right:0;border-bottom:2px solid;border-right:2px solid}
+.fc-dot{position:absolute;top:6px;right:6px;width:5px;height:5px}
+
+/* PIXEL ART SPRITES */
+.pixel-sprite{image-rendering:pixelated;position:absolute;pointer-events:none}
+
+/* REVEAL animations */
+.reveal{opacity:0;transform:translateY(50px);transition:opacity 0.8s ease,transform 0.8s ease}
+.reveal.left{transform:translateX(-60px)}
+.reveal.right{transform:translateX(60px)}
+.reveal.scale{transform:scale(0.85)}
+.reveal.visible{opacity:1 !important;transform:none !important}
+
+/* SECTION base */
+section{position:relative;overflow:hidden}
+.section-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.section-tag{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:3px;margin-bottom:12px;display:block}
+.section-title{font-family:'Press Start 2P',monospace;font-size:clamp(18px,3vw,32px);line-height:1.5;margin-bottom:16px}
+.section-sub{font-size:14px;color:rgba(255,255,255,0.45);max-width:500px;margin:0 auto;line-height:1.8}
+.inner{max-width:1100px;margin:0 auto;padding:0 24px}
+.section-pad{padding:80px 0}
+
+/* PIXEL CARD */
+.pcard{position:relative;background:var(--glass);backdrop-filter:blur(12px);padding:28px 24px;transition:transform 0.15s ease,box-shadow 0.3s;cursor:default;image-rendering:pixelated}
+.pcard .pcard-line{position:absolute;top:0;left:0;right:0;height:2px}
+.pcard:hover{transform:translateY(-4px)}
+
+/* ABOUT */
+#about{background:var(--navy);padding:80px 0}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.stat-row{display:flex;gap:32px;flex-wrap:wrap;margin-top:32px}
+.stat-box{text-align:center}
+.stat-num{font-family:'Press Start 2P',monospace;font-size:22px;color:var(--cyan);text-shadow:0 0 20px rgba(0,245,255,0.5);display:block;line-height:1}
+.stat-label{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-top:6px;display:block}
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.skill-card{background:rgba(255,255,255,0.03);padding:20px 16px;text-align:center;transition:all 0.2s;border:1px solid rgba(255,255,255,0.05)}
+.skill-card:hover{transform:scale(1.04)}
+.skill-icon{font-size:32px;display:block;margin-bottom:8px}
+.skill-label{font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px}
+
+/* SERVICES */
+#services{background:var(--navy2);padding:80px 0}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:48px}
+.svc-card{position:relative;padding:28px 24px;background:var(--glass);backdrop-filter:blur(10px);transition:all 0.2s;cursor:default;overflow:hidden}
+.svc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,#00f5ff)}
+.svc-card::after{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,var(--c,#00f5ff),transparent 70%);opacity:0.12;border-radius:50%}
+.svc-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,0.4),0 0 20px rgba(var(--cr),0.15)}
+.svc-icon{font-size:36px;margin-bottom:16px;display:block}
+.svc-title{font-family:'Press Start 2P',monospace;font-size:11px;color:#fff;margin-bottom:10px;line-height:1.5}
+.svc-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.8;margin-bottom:16px}
+.svc-benefit{display:flex;align-items:center;gap:8px;font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:6px}
+.svc-benefit::before{content:'▸';color:var(--c,#00f5ff);flex-shrink:0}
+.btn-svc{display:inline-flex;align-items:center;gap:6px;font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 14px;border:1px solid;text-decoration:none;margin-top:16px;transition:all 0.2s;clip-path:polygon(0 3px,3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px))}
+
+/* PORTFOLIO GRID */
+#portfolio-grid{background:var(--navy);padding:80px 0}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:32px 0 40px}
+.filter-btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 14px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;transition:all 0.2s;clip-path:polygon(0 3px,3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px));letter-spacing:1px}
+.filter-btn.active{background:linear-gradient(135deg,var(--pink),var(--purple));border:none;color:#fff;box-shadow:0 0 16px rgba(236,72,153,0.4)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.pf-card{background:var(--glass);backdrop-filter:blur(8px);overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative}
+.pf-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,0.5)}
+.pf-thumb{height:170px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.pf-thumb-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,255,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.08) 1px,transparent 1px);background-size:20px 20px}
+.pf-scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
+.pf-icon-wrap{position:relative;z-index:1;text-align:center}
+.pf-icon-wrap span{font-size:40px;display:block;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(0,245,255,0.6))}
+.pf-icon-cat{font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:2px}
+.pf-badge{position:absolute;top:8px;right:8px;font-family:'Press Start 2P',monospace;font-size:7px;padding:3px 8px;border:1px solid;letter-spacing:1px}
+.pf-body{padding:14px 16px}
+.pf-title{font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;margin-bottom:6px;line-height:1.4}
+.pf-desc{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6}
+.pf-corner{position:absolute;width:7px;height:7px}
+.pf-corner.tl{top:0;left:0;border-top:2px solid var(--c,#00f5ff);border-left:2px solid var(--c,#00f5ff)}
+.pf-corner.br{bottom:0;right:0;border-bottom:2px solid var(--c,#00f5ff);border-right:2px solid var(--c,#00f5ff)}
+
+/* WHY */
+#why{background:var(--navy2);padding:80px 0}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:48px}
+.why-card{background:rgba(2,4,20,0.6);border:1px solid rgba(255,255,255,0.05);padding:22px 18px;transition:all 0.2s;position:relative;overflow:hidden}
+.why-card::after{content:'';position:absolute;bottom:-30px;right:-30px;width:80px;height:80px;background:radial-gradient(circle,var(--c,#00f5ff),transparent 70%);opacity:0.1;border-radius:50%}
+.why-card:hover{border-color:rgba(0,245,255,0.2);transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,0.4)}
+.why-icon{font-size:26px;margin-bottom:12px;display:block}
+.why-title{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;margin-bottom:6px;line-height:1.5}
+.why-desc{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.7}
+
+/* PRICING */
+#pricing{background:var(--navy);padding:80px 0}
+.tab-row{display:flex;gap:8px;justify-content:center;margin:32px 0 40px}
+.tab-btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:10px 24px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;transition:all 0.2s;letter-spacing:1px}
+.tab-btn.active{background:linear-gradient(135deg,var(--yellow),var(--orange));border:none;color:#000;box-shadow:0 0 20px rgba(250,204,21,0.4)}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.price-card{background:var(--glass);backdrop-filter:blur(12px);padding:28px 24px;position:relative;overflow:hidden;transition:all 0.2s}
+.price-card.hot{border:1px solid rgba(168,85,247,0.4);box-shadow:0 0 30px rgba(168,85,247,0.15);transform:scale(1.03)}
+.price-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,#00f5ff)}
+.price-tag-hot{position:absolute;top:10px;right:10px;font-family:'Press Start 2P',monospace;font-size:7px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;padding:3px 8px;letter-spacing:1px}
+.price-tier{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:2px;margin-bottom:8px}
+.price-val{font-family:'Press Start 2P',monospace;font-size:22px;color:#fff;margin-bottom:20px;text-shadow:0 0 20px rgba(0,245,255,0.3)}
+.price-item{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:8px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.price-item::before{content:'▸';flex-shrink:0;margin-top:1px}
+.btn-price{display:block;text-align:center;font-family:'Press Start 2P',monospace;font-size:8px;padding:10px;border:1px solid;text-decoration:none;margin-top:20px;transition:all 0.2s;letter-spacing:1px;clip-path:polygon(0 4px,4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px))}
+
+/* PROCESS */
+#process{background:var(--navy2);padding:80px 0}
+.process-wrap{position:relative;max-width:700px;margin:48px auto 0;padding-left:80px}
+.process-line{position:absolute;left:27px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--cyan),var(--purple),var(--pink))}
+.process-step{display:flex;gap:24px;align-items:flex-start;margin-bottom:28px;position:relative}
+.process-num{position:absolute;left:-80px;top:0;width:54px;height:54px;background:var(--navy2);border:1px solid rgba(6,182,212,0.4);display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:11px;color:var(--cyan);flex-shrink:0;box-shadow:0 0 16px rgba(6,182,212,0.15);clip-path:polygon(0 6px,6px 0,48px 0,54px 6px,54px 48px,48px 54px,6px 54px,0 48px)}
+.process-body{background:rgba(2,4,20,0.7);border:1px solid rgba(6,182,212,0.1);padding:18px 22px;flex:1;transition:all 0.2s}
+.process-body:hover{border-color:rgba(6,182,212,0.3);transform:translateX(4px)}
+.process-icon-title{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.process-head{font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;line-height:1.4}
+.process-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7}
+
+/* TESTIMONIALS */
+#testimonials{background:var(--navy);padding:80px 0}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:48px}
+.testi-card{background:var(--glass);backdrop-filter:blur(12px);padding:24px;position:relative;overflow:hidden;transition:all 0.2s}
+.testi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.testi-card:hover{transform:translateY(-4px)}
+.testi-quote{font-family:'Press Start 2P',monospace;font-size:24px;margin-bottom:12px}
+.testi-text{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.8;font-style:italic;margin-bottom:14px}
+.testi-stars{display:flex;gap:3px;margin-bottom:12px}
+.testi-star{color:var(--yellow);font-size:12px}
+.testi-name{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff}
+.testi-role{font-family:'Press Start 2P',monospace;font-size:7px;margin-top:3px;letter-spacing:1px}
+
+/* FAQ */
+#faq{background:var(--navy2);padding:80px 0}
+.faq-wrap{max-width:720px;margin:48px auto 0}
+.faq-item{border:1px solid rgba(0,245,255,0.08);margin-bottom:8px;transition:border-color 0.2s;overflow:hidden}
+.faq-item:hover{border-color:rgba(0,245,255,0.2)}
+.faq-q{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:rgba(2,4,20,0.6);border:none;cursor:pointer;color:#fff;font-family:'Press Start 2P',monospace;font-size:9px;text-align:left;gap:12px;line-height:1.6;transition:background 0.2s}
+.faq-q.open{background:rgba(0,245,255,0.05)}
+.faq-ico{color:var(--cyan);font-size:18px;flex-shrink:0;transition:transform 0.3s;font-family:'Share Tech Mono',monospace}
+.faq-ico.open{transform:rotate(45deg)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.3s}
+.faq-a.open{max-height:200px;padding:0 20px 16px}
+.faq-a p{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.8;font-family:'Share Tech Mono',monospace}
+
+/* CONTACT */
+#contact{background:var(--navy);padding:80px 0}
+.contact-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:40px 0}
+.contact-card{background:var(--glass);backdrop-filter:blur(12px);padding:22px 18px;position:relative;transition:all 0.2s;overflow:hidden;cursor:pointer;text-align:center;border:1px solid rgba(255,255,255,0.05)}
+.contact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,#00f5ff)}
+.contact-card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,0.1);box-shadow:0 20px 40px rgba(0,0,0,0.4),0 0 20px rgba(0,245,255,0.1)}
+.contact-icon{font-size:30px;margin-bottom:10px;display:block}
+.contact-label{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;margin-bottom:4px}
+.contact-val{font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:14px;word-break:break-all}
+.contact-hint{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-bottom:12px}
+.btn-contact{display:inline-flex;align-items:center;gap:6px;font-family:'Press Start 2P',monospace;font-size:8px;padding:7px 14px;border:1px solid;text-decoration:none;cursor:pointer;background:transparent;transition:all 0.2s;letter-spacing:1px;clip-path:polygon(0 3px,3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px))}
+.btn-contact:hover{box-shadow:0 0 12px var(--c,#00f5ff)}
+.cta-big{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--pink));color:#fff;font-family:'Press Start 2P',monospace;font-size:11px;padding:18px 36px;text-decoration:none;letter-spacing:2px;cursor:pointer;border:none;transition:all 0.2s;clip-path:polygon(0 6px,6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px));box-shadow:0 0 40px rgba(0,245,255,0.35)}
+.cta-big:hover{transform:scale(1.04);box-shadow:0 0 60px rgba(0,245,255,0.55)}
+
+/* FOOTER */
+footer{background:#010310;border-top:1px solid rgba(0,245,255,0.08);padding:60px 24px 24px;position:relative;overflow:hidden}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1100px;margin:0 auto 48px}
+.footer-logo-wrap{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.footer-brand-desc{font-size:12px;color:rgba(255,255,255,0.35);line-height:1.8;max-width:250px;margin-bottom:18px}
+.footer-social{display:flex;gap:8px}
+.footer-soc-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;background:transparent}
+.footer-soc-btn:hover{border-color:var(--cyan);box-shadow:0 0 10px rgba(0,245,255,0.3);transform:scale(1.1)}
+.footer-col-title{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px;display:block}
+.footer-link{display:block;font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;text-decoration:none;cursor:pointer;transition:color 0.2s;font-family:'Share Tech Mono',monospace;background:none;border:none}
+.footer-link:hover{color:var(--cyan)}
+.footer-bottom{max-width:1100px;margin:0 auto;border-top:1px solid rgba(255,255,255,0.05);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.footer-copy{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:1px}
+
+/* PIXEL ART DECORATIVE SPRITES (SVG inline) */
+.px-art-wrap{position:absolute;pointer-events:none;opacity:0.35}
+
+/* ANIMATIONS */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes float-rot{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-10px)}}
+@keyframes px-drift{0%{transform:translate(0,0)}25%{transform:translate(8px,-12px)}50%{transform:translate(16px,4px)}75%{transform:translate(4px,16px)}100%{transform:translate(0,0)}}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 8px var(--c,#00f5ff)}50%{box-shadow:0 0 20px var(--c,#00f5ff),0 0 40px rgba(0,245,255,0.2)}}
+@keyframes glitch{0%,100%{clip-path:none;transform:none}10%{clip-path:polygon(0 20%,100% 20%,100% 21%,0 21%);transform:translateX(-2px)}20%{clip-path:none;transform:none}30%{clip-path:polygon(0 60%,100% 60%,100% 62%,0 62%);transform:translateX(2px)}40%{clip-path:none;transform:none}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes spin-slow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* Moving scanline overlay */
+.scanline-move{position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(to bottom,transparent,rgba(0,245,255,0.06),transparent);animation:scanline 5s linear infinite;pointer-events:none;z-index:1}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .about-grid,.footer-grid{grid-template-columns:1fr}
+  .hero-title{font-size:20px}
+  .cards-stage{height:240px}
+  nav .nav-links{display:none}
+  .process-wrap{padding-left:60px}
+  .process-num{width:44px;height:44px;left:-60px;font-size:9px;clip-path:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Pixel canvas for particles -->
+<canvas id="pixel-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:0;width:100%;height:100%"></canvas>
+
+<!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-px">F</div>
+    <span style="font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;letter-spacing:2px">FROSTXA <span class="neon-cyan">D</span></span>
+  </div>
+  <div class="nav-links">
+    <a href="#hero">HOME</a>
+    <a href="#about">ABOUT</a>
+    <a href="#services">SERVICES</a>
+    <a href="#portfolio-grid">PORTFOLIO</a>
+    <a href="#pricing">PRICING</a>
+    <a href="#contact">CONTACT</a>
+    <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-order-nav">⚡ ORDER</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-scanlines"></div>
+  <div class="scanline-move"></div>
+  <div class="hero-glow-1"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-glow-3"></div>
+
+  <!-- Pixel art decorative sprites -->
+  <div class="px-art-wrap" style="top:12%;left:5%;animation:px-drift 12s ease-in-out infinite">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+      <rect x="16" y="0" width="16" height="8" fill="#00f5ff" opacity="0.8"/>
+      <rect x="8" y="8" width="32" height="8" fill="#00f5ff" opacity="0.9"/>
+      <rect x="0" y="16" width="48" height="16" fill="#00f5ff"/>
+      <rect x="8" y="32" width="32" height="8" fill="#00f5ff" opacity="0.9"/>
+      <rect x="16" y="40" width="16" height="8" fill="#00f5ff" opacity="0.8"/>
+      <rect x="20" y="20" width="8" height="8" fill="#000"/>
+    </svg>
+  </div>
+  <div class="px-art-wrap" style="top:70%;right:4%;animation:px-drift 15s 3s ease-in-out infinite">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+      <rect x="8" y="0" width="24" height="8" fill="#a855f7"/>
+      <rect x="0" y="8" width="40" height="24" fill="#a855f7"/>
+      <rect x="8" y="32" width="24" height="8" fill="#a855f7"/>
+      <rect x="8" y="12" width="8" height="8" fill="#000"/>
+      <rect x="24" y="12" width="8" height="8" fill="#000"/>
+      <rect x="12" y="24" width="16" height="4" fill="#000"/>
+    </svg>
+  </div>
+  <div class="px-art-wrap" style="bottom:15%;left:8%;animation:float-y 6s 2s ease-in-out infinite">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+      <rect x="12" y="0" width="8" height="8" fill="#ec4899"/>
+      <rect x="8" y="8" width="16" height="4" fill="#ec4899"/>
+      <rect x="4" y="12" width="24" height="4" fill="#ec4899"/>
+      <rect x="0" y="16" width="32" height="8" fill="#ec4899"/>
+      <rect x="4" y="24" width="8" height="8" fill="#ec4899"/>
+      <rect x="20" y="24" width="8" height="8" fill="#ec4899"/>
+    </svg>
+  </div>
+  <div class="px-art-wrap" style="top:30%;right:7%;animation:spin-slow 20s linear infinite;opacity:0.2">
+    <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+      <rect x="28" y="0" width="4" height="60" fill="#facc15"/>
+      <rect x="0" y="28" width="60" height="4" fill="#facc15"/>
+      <rect x="8" y="8" width="4" height="4" fill="#facc15"/>
+      <rect x="48" y="8" width="4" height="4" fill="#facc15"/>
+      <rect x="8" y="48" width="4" height="4" fill="#facc15"/>
+      <rect x="48" y="48" width="4" height="4" fill="#facc15"/>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge reveal" id="hero-badge">
+      <span class="dot"></span>
+      CREATIVE DIGITAL STUDIO
+    </div>
+
+    <h1 class="hero-title reveal" id="hero-title">
+      <span class="grad-text" id="glitch-text">FROSTXA D</span>
+    </h1>
+
+    <p class="hero-sub reveal" id="hero-sub">POSTER DESIGN • GAME VISUAL • ROBLOX SCRIPT</p>
+
+    <p class="hero-desc reveal" id="hero-desc">
+      Creative digital service untuk poster sosial media, poster online shop, poster game, dan script Roblox custom.
+    </p>
+
+    <div class="hero-btns reveal" id="hero-btns">
+      <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-primary">⚡ ORDER SEKARANG</a>
+      <button class="btn-secondary" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">🎨 LIHAT LAYANAN</button>
+    </div>
+
+    <!-- 3D Floating Portfolio Cards -->
+    <div class="cards-stage reveal" id="cards-stage">
+      <!-- Card 1 -->
+      <div class="float-card" id="fc1" style="--c:#00f5ff;width:150px;transform:translate(-50%,-50%) translateX(-210px) translateY(-30px) rotate(-8deg)">
+        <div class="fc-pixel-corner tl" style="border-color:#00f5ff"></div>
+        <div class="fc-pixel-corner tr" style="border-color:#00f5ff"></div>
+        <div class="fc-pixel-corner bl" style="border-color:#00f5ff"></div>
+        <div class="fc-pixel-corner br" style="border-color:#00f5ff"></div>
+        <div class="fc-dot" style="background:#00f5ff;box-shadow:0 0 6px #00f5ff"></div>
+        <span class="fc-icon">🛍️</span>
+        <div class="fc-cat neon-cyan">ONLINE SHOP</div>
+        <div class="fc-title">Neon Sale Poster</div>
+      </div>
+      <!-- Card 2 (center) -->
+      <div class="float-card" id="fc2" style="--c:#a855f7;width:170px;transform:translate(-50%,-50%) translateX(0) translateY(-80px);z-index:3;border:1px solid rgba(168,85,247,0.3)">
+        <div class="fc-pixel-corner tl" style="border-color:#a855f7"></div>
+        <div class="fc-pixel-corner tr" style="border-color:#a855f7"></div>
+        <div class="fc-pixel-corner bl" style="border-color:#a855f7"></div>
+        <div class="fc-pixel-corner br" style="border-color:#a855f7"></div>
+        <div class="fc-dot" style="background:#a855f7;box-shadow:0 0 6px #a855f7"></div>
+        <span class="fc-icon">🎮</span>
+        <div class="fc-cat neon-purple">GAME POSTER</div>
+        <div class="fc-title">Cyber Game Event</div>
+      </div>
+      <!-- Card 3 -->
+      <div class="float-card" id="fc3" style="--c:#facc15;width:150px;transform:translate(-50%,-50%) translateX(210px) translateY(-30px) rotate(8deg);border:1px solid rgba(250,204,21,0.3)">
+        <div class="fc-pixel-corner tl" style="border-color:#facc15"></div>
+        <div class="fc-pixel-corner tr" style="border-color:#facc15"></div>
+        <div class="fc-pixel-corner bl" style="border-color:#facc15"></div>
+        <div class="fc-pixel-corner br" style="border-color:#facc15"></div>
+        <div class="fc-dot" style="background:#facc15;box-shadow:0 0 6px #facc15"></div>
+        <span class="fc-icon">⚙️</span>
+        <div class="fc-cat neon-yellow">ROBLOX SCRIPT</div>
+        <div class="fc-title">Shop GUI System</div>
+      </div>
+      <!-- Card 4 -->
+      <div class="float-card" id="fc4" style="--c:#ec4899;width:140px;transform:translate(-50%,-50%) translateX(-100px) translateY(80px) rotate(-5deg);border:1px solid rgba(236,72,153,0.3)">
+        <div class="fc-pixel-corner tl" style="border-color:#ec4899"></div>
+        <div class="fc-pixel-corner br" style="border-color:#ec4899"></div>
+        <span class="fc-icon">📱</span>
+        <div class="fc-cat neon-pink">SOSMED</div>
+        <div class="fc-title">Streetwear Promo</div>
+      </div>
+      <!-- Card 5 -->
+      <div class="float-card" id="fc5" style="--c:#f97316;width:140px;transform:translate(-50%,-50%) translateX(100px) translateY(80px) rotate(5deg);border:1px solid rgba(249,115,22,0.3)">
+        <div class="fc-pixel-corner tl" style="border-color:#f97316"></div>
+        <div class="fc-pixel-corner br" style="border-color:#f97316"></div>
+        <span class="fc-icon">🎯</span>
+        <div class="fc-cat" style="color:#f97316;text-shadow:0 0 8px #f97316">GAME</div>
+        <div class="fc-title">Pixel Battle Poster</div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div style="margin-top:36px;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0.4" id="scroll-ind">
+      <span style="font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,255,255,0.4);letter-spacing:3px">SCROLL</span>
+      <div style="width:1px;height:40px;background:linear-gradient(to bottom,rgba(0,245,255,0.7),transparent);animation:blink 1.5s infinite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ABOUT ═══════════════════════════════ -->
+<section id="about" style="background:var(--navy);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <!-- Pixel corner decoration -->
+  <div class="px-art-wrap" style="top:10%;right:3%;opacity:0.2;animation:float-y 8s ease-in-out infinite">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="image-rendering:pixelated">
+      <rect x="36" y="0" width="8" height="8" fill="#a855f7"/><rect x="28" y="8" width="24" height="8" fill="#a855f7"/>
+      <rect x="20" y="16" width="40" height="8" fill="#a855f7"/><rect x="12" y="24" width="56" height="32" fill="#a855f7"/>
+      <rect x="20" y="56" width="40" height="8" fill="#a855f7"/><rect x="28" y="64" width="24" height="8" fill="#a855f7"/>
+      <rect x="36" y="72" width="8" height="8" fill="#a855f7"/>
+      <rect x="24" y="32" width="12" height="12" fill="#000"/><rect x="44" y="32" width="12" height="12" fill="#000"/>
+      <rect x="28" y="48" width="24" height="4" fill="#000"/>
+    </svg>
+  </div>
+  <div class="inner">
+    <div class="about-grid">
+      <div class="reveal left">
+        <span class="section-tag neon-cyan">// TENTANG KAMI</span>
+        <h2 class="section-title">Bukan <span class="grad-text">Template</span><br/>Biasa.</h2>
+        <p style="color:rgba(255,255,255,0.6);line-height:1.9;font-size:13px;margin-bottom:14px">
+          Frostxa D adalah brand kreatif digital yang melayani desain poster visual dan script Roblox custom. Bukan sekadar desain, tapi visual yang beneran <em style="color:var(--cyan)">kena</em> dan nggak pasaran.
+        </p>
+        <p style="color:rgba(255,255,255,0.6);line-height:1.9;font-size:13px;margin-bottom:32px">
+          Dari promosi sosial media, online shop, komunitas game, sampai pengembangan game Roblox — semua dikerjain dengan niat, profesional, dan harga yang fleksibel.
+        </p>
+        <div class="stat-row">
+          <div class="stat-box"><span class="stat-num">50+</span><span class="stat-label">PROJECT SELESAI</span></div>
+          <div class="stat-box"><span class="stat-num" style="color:var(--pink);text-shadow:0 0 20px rgba(236,72,153,0.5)">100%</span><span class="stat-label">CLIENT PUAS</span></div>
+          <div class="stat-box"><span class="stat-num" style="color:var(--yellow);text-shadow:0 0 20px rgba(250,204,21,0.4)">FAST</span><span class="stat-label">RESPONSE</span></div>
+        </div>
+      </div>
+      <div class="skill-grid reveal right">
+        <div class="skill-card" style="border-color:rgba(0,245,255,0.15);box-shadow:0 0 16px rgba(0,245,255,0.08)">
+          <span class="skill-icon">🎨</span>
+          <span class="skill-label neon-cyan">POSTER DESIGN</span>
+        </div>
+        <div class="skill-card" style="border-color:rgba(168,85,247,0.15);box-shadow:0 0 16px rgba(168,85,247,0.08)">
+          <span class="skill-icon">🎮</span>
+          <span class="skill-label neon-purple">GAME VISUAL</span>
+        </div>
+        <div class="skill-card" style="border-color:rgba(250,204,21,0.15);box-shadow:0 0 16px rgba(250,204,21,0.08)">
+          <span class="skill-icon">⚙️</span>
+          <span class="skill-label neon-yellow">ROBLOX SCRIPT</span>
+        </div>
+        <div class="skill-card" style="border-color:rgba(236,72,153,0.15);box-shadow:0 0 16px rgba(236,72,153,0.08)">
+          <span class="skill-icon">📱</span>
+          <span class="skill-label neon-pink">SOCIAL MEDIA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SERVICES ═══════════════════════════════ -->
+<section id="services" style="background:var(--navy2);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag neon-purple">// LAYANAN</span>
+      <h2 class="section-title">Jasa <span style="background:linear-gradient(135deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Kreatif</span> Digital</h2>
+      <p class="section-sub">Semua yang kamu butuhkan buat tampil beda dan profesional di dunia digital.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc-card reveal" style="--c:#00f5ff;--cr:0,245,255;border:1px solid rgba(0,245,255,0.12)" data-delay="0">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)"></div>
+        <div class="px-corner tl"></div><div class="px-corner br" style="--c:#00f5ff"></div>
+        <span class="svc-icon">🎨</span>
+        <div class="svc-title">Poster Sosial Media</div>
+        <p class="svc-desc">Konten promosi, postingan Instagram, Facebook, story, feed, banner, dan kebutuhan branding sosial media yang eye-catching.</p>
+        <div class="svc-benefit" style="--c:#00f5ff">Design modern & premium</div>
+        <div class="svc-benefit" style="--c:#00f5ff">File siap upload</div>
+        <div class="svc-benefit" style="--c:#00f5ff">Cocok semua platform</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-svc" style="border-color:rgba(0,245,255,0.4);color:var(--cyan)">ORDER →</a>
+      </div>
+      <div class="svc-card reveal" style="--c:#ec4899;--cr:236,72,153;border:1px solid rgba(236,72,153,0.12)" data-delay="100">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)"></div>
+        <div class="px-corner tl" style="--c:#ec4899"></div><div class="px-corner br" style="--c:#ec4899"></div>
+        <span class="svc-icon">🛍️</span>
+        <div class="svc-title">Poster Online Shop</div>
+        <p class="svc-desc">Promosi produk, katalog jualan, banner toko, flash sale, launching produk, dan desain jualan yang menarik dan menjual.</p>
+        <div class="svc-benefit" style="--c:#ec4899">Layout yang menjual</div>
+        <div class="svc-benefit" style="--c:#ec4899">Visual produk menonjol</div>
+        <div class="svc-benefit" style="--c:#ec4899">Brand identity kuat</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-svc" style="border-color:rgba(236,72,153,0.4);color:var(--pink)">ORDER →</a>
+      </div>
+      <div class="svc-card reveal" style="--c:#a855f7;--cr:168,85,247;border:1px solid rgba(168,85,247,0.12)" data-delay="200">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)"></div>
+        <div class="px-corner tl" style="--c:#a855f7"></div><div class="px-corner br" style="--c:#a855f7"></div>
+        <span class="svc-icon">🎮</span>
+        <div class="svc-title">Poster Game</div>
+        <p class="svc-desc">Thumbnail game, poster event game, banner komunitas game, poster turnamen, dan visual bertema gaming yang epik.</p>
+        <div class="svc-benefit" style="--c:#a855f7">Visual gaming premium</div>
+        <div class="svc-benefit" style="--c:#a855f7">Atmosfer game kental</div>
+        <div class="svc-benefit" style="--c:#a855f7">Cocok semua genre</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-svc" style="border-color:rgba(168,85,247,0.4);color:var(--purple)">ORDER →</a>
+      </div>
+      <div class="svc-card reveal" style="--c:#facc15;--cr:250,204,21;border:1px solid rgba(250,204,21,0.12)" data-delay="300">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)"></div>
+        <div class="px-corner tl" style="--c:#facc15"></div><div class="px-corner br" style="--c:#facc15"></div>
+        <span class="svc-icon">⚙️</span>
+        <div class="svc-title">Script Game Roblox</div>
+        <p class="svc-desc">Script Roblox custom: sistem gameplay, fitur game, GUI, shop system, leaderboard, dan mekanik sederhana sampai kompleks.</p>
+        <div class="svc-benefit" style="--c:#facc15">Kode bersih & optimal</div>
+        <div class="svc-benefit" style="--c:#facc15">Sesuai request</div>
+        <div class="svc-benefit" style="--c:#facc15">Support & revisi</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-svc" style="border-color:rgba(250,204,21,0.4);color:var(--yellow)">ORDER →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ PORTFOLIO GRID ═══════════════════════════════ -->
+<section id="portfolio-grid" style="background:var(--navy);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag neon-pink">// PORTFOLIO</span>
+      <h2 class="section-title">Karya <span style="background:linear-gradient(135deg,#ec4899,#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Pilihan</span></h2>
+      <p class="section-sub">Visual yang udah kami buat. Karya nyata, bukan mockup kosong.</p>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterPortfolio('all',this)">SEMUA</button>
+      <button class="filter-btn" onclick="filterPortfolio('social',this)">SOCIAL MEDIA</button>
+      <button class="filter-btn" onclick="filterPortfolio('shop',this)">ONLINE SHOP</button>
+      <button class="filter-btn" onclick="filterPortfolio('game',this)">GAME POSTER</button>
+      <button class="filter-btn" onclick="filterPortfolio('roblox',this)">ROBLOX SCRIPT</button>
+    </div>
+    <div class="pgrid" id="pgrid">
+      <div class="pf-card reveal" data-cat="shop" style="--c:#00f5ff;border:1px solid rgba(0,245,255,0.12)">
+        <div class="pf-corner tl"></div><div class="pf-corner br" style="--c:#00f5ff"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(0,245,255,0.15),rgba(168,85,247,0.1))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>🛍️</span><div class="pf-icon-cat neon-cyan">ONLINE SHOP</div></div>
+          <div class="pf-badge" style="border-color:rgba(0,245,255,0.4);color:var(--cyan)">SHOP</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Neon Sale Poster</div><p class="pf-desc">Banner flash sale visual neon dengan warna striking dan eye-catching.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="game" style="--c:#a855f7;border:1px solid rgba(168,85,247,0.12)">
+        <div class="pf-corner tl" style="--c:#a855f7"></div><div class="pf-corner br" style="--c:#a855f7"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(250,204,21,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>🎮</span><div class="pf-icon-cat neon-purple">GAME POSTER</div></div>
+          <div class="pf-badge" style="border-color:rgba(168,85,247,0.4);color:var(--purple)">GAME</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Cyber Game Event</div><p class="pf-desc">Poster event gaming cyberpunk dengan visual 3D futuristik.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="roblox" style="--c:#10b981;border:1px solid rgba(16,185,129,0.12)">
+        <div class="pf-corner tl" style="--c:#10b981"></div><div class="pf-corner br" style="--c:#10b981"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(245,158,11,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>⚙️</span><div class="pf-icon-cat" style="color:#10b981;text-shadow:0 0 8px #10b981">ROBLOX</div></div>
+          <div class="pf-badge" style="border-color:rgba(16,185,129,0.4);color:#10b981">SCRIPT</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Roblox Shop GUI</div><p class="pf-desc">Sistem GUI toko Roblox custom dengan UI clean dan fungsional.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="social" style="--c:#ec4899;border:1px solid rgba(236,72,153,0.12)">
+        <div class="pf-corner tl" style="--c:#ec4899"></div><div class="pf-corner br" style="--c:#ec4899"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(139,92,246,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>📸</span><div class="pf-icon-cat neon-pink">SOCIAL MEDIA</div></div>
+          <div class="pf-badge" style="border-color:rgba(236,72,153,0.4);color:var(--pink)">SOSMED</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Streetwear Promo</div><p class="pf-desc">Desain promo streetwear estetik untuk konten Instagram dan feed.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="game" style="--c:#f97316;border:1px solid rgba(249,115,22,0.12)">
+        <div class="pf-corner tl" style="--c:#f97316"></div><div class="pf-corner br" style="--c:#f97316"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(6,182,212,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>⚔️</span><div class="pf-icon-cat" style="color:#f97316;text-shadow:0 0 8px #f97316">GAME POSTER</div></div>
+          <div class="pf-badge" style="border-color:rgba(249,115,22,0.4);color:#f97316">GAME</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Pixel Battle Poster</div><p class="pf-desc">Poster turnamen pixel art dengan komposisi dinamis dan warna bold.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="shop" style="--c:#06b6d4;border:1px solid rgba(6,182,212,0.12)">
+        <div class="pf-corner tl" style="--c:#06b6d4"></div><div class="pf-corner br" style="--c:#06b6d4"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(6,182,212,0.12),rgba(236,72,153,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>🏷️</span><div class="pf-icon-cat" style="color:#06b6d4;text-shadow:0 0 8px #06b6d4">ONLINE SHOP</div></div>
+          <div class="pf-badge" style="border-color:rgba(6,182,212,0.4);color:#06b6d4">SHOP</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Flash Sale Banner</div><p class="pf-desc">Banner promo produk dengan desain menarik dan call-to-action jelas.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="roblox" style="--c:#6366f1;border:1px solid rgba(99,102,241,0.12)">
+        <div class="pf-corner tl" style="--c:#6366f1"></div><div class="pf-corner br" style="--c:#6366f1"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(34,211,238,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>🏆</span><div class="pf-icon-cat" style="color:#6366f1;text-shadow:0 0 8px #6366f1">ROBLOX</div></div>
+          <div class="pf-badge" style="border-color:rgba(99,102,241,0.4);color:#6366f1">SCRIPT</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Leaderboard System</div><p class="pf-desc">Sistem leaderboard Roblox real-time dengan animasi dan auto-update.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="social" style="--c:#f43f5e;border:1px solid rgba(244,63,94,0.12)">
+        <div class="pf-corner tl" style="--c:#f43f5e"></div><div class="pf-corner br" style="--c:#f43f5e"></div>
+        <div class="pf-thumb" style="background:linear-gradient(135deg,rgba(244,63,94,0.12),rgba(167,139,250,0.08))">
+          <div class="pf-thumb-grid"></div><div class="pf-scan"></div>
+          <div class="pf-icon-wrap"><span>📲</span><div class="pf-icon-cat" style="color:#f43f5e;text-shadow:0 0 8px #f43f5e">SOCIAL MEDIA</div></div>
+          <div class="pf-badge" style="border-color:rgba(244,63,94,0.4);color:#f43f5e">SOSMED</div>
+        </div>
+        <div class="pf-body"><div class="pf-title">Instagram Promo Pack</div><p class="pf-desc">Pack konten Instagram lengkap: feed, story, dan highlight cover.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ WHY CHOOSE ═══════════════════════════════ -->
+<section id="why" style="background:var(--navy2);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag neon-green" style="color:var(--green)">// KENAPA FROSTXA D</span>
+      <h2 class="section-title">Kenapa Harus <span style="background:linear-gradient(135deg,#10b981,#00f5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Pilih Kita?</span></h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal" style="--c:#00f5ff;border-left:2px solid rgba(0,245,255,0.3)" data-delay="0"><span class="why-icon">✨</span><div class="why-title">Desain Niat</div><p class="why-desc">Visual digarap serius, bukan template asal-asalan.</p></div>
+      <div class="why-card reveal" style="--c:#a855f7;border-left:2px solid rgba(168,85,247,0.3)" data-delay="80"><span class="why-icon">🎯</span><div class="why-title">Request Konsep</div><p class="why-desc">Kirim referensi, warna, tema — kita kerjain sesuai mau kamu.</p></div>
+      <div class="why-card reveal" style="--c:#facc15;border-left:2px solid rgba(250,204,21,0.3)" data-delay="160"><span class="why-icon">⚡</span><div class="why-title">Fast Response</div><p class="why-desc">Komunikasi cepat, update progress, nggak bikin nunggu lama.</p></div>
+      <div class="why-card reveal" style="--c:#ec4899;border-left:2px solid rgba(236,72,153,0.3)" data-delay="240"><span class="why-icon">💰</span><div class="why-title">Harga Fleksibel</div><p class="why-desc">Harga disesuaikan kebutuhan, cocok untuk semua kalangan.</p></div>
+      <div class="why-card reveal" style="--c:#10b981;border-left:2px solid rgba(16,185,129,0.3)" data-delay="0"><span class="why-icon">🔄</span><div class="why-title">Revisi Bisa</div><p class="why-desc">Hasil nggak sesuai? Bisa direvisi sesuai paket yang dipilih.</p></div>
+      <div class="why-card reveal" style="--c:#f97316;border-left:2px solid rgba(249,115,22,0.3)" data-delay="80"><span class="why-icon">🏆</span><div class="why-title">Kualitas Premium</div><p class="why-desc">Tampilan premium, cocok untuk brand, produk, dan komunitas.</p></div>
+      <div class="why-card reveal" style="--c:#6366f1;border-left:2px solid rgba(99,102,241,0.3)" data-delay="160"><span class="why-icon">🌐</span><div class="why-title">Multi Platform</div><p class="why-desc">Cocok untuk Instagram, Facebook, YouTube, Roblox, dan lainnya.</p></div>
+      <div class="why-card reveal" style="--c:#06b6d4;border-left:2px solid rgba(6,182,212,0.3)" data-delay="240"><span class="why-icon">🤝</span><div class="why-title">Custom Request</div><p class="why-desc">Mau konsep unik yang belum pernah ada? Let's discuss!</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ PRICING ═══════════════════════════════ -->
+<section id="pricing" style="background:var(--navy);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag neon-yellow">// HARGA</span>
+      <h2 class="section-title">Paket <span style="background:linear-gradient(135deg,#facc15,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Harga</span></h2>
+      <p class="section-sub">Harga fleksibel, hasil nggak mengecewakan.</p>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchPricing('poster',this)">🎨 POSTER DESIGN</button>
+      <button class="tab-btn" onclick="switchPricing('roblox',this)">⚙️ ROBLOX SCRIPT</button>
+    </div>
+    <div id="price-poster" class="price-grid">
+      <div class="price-card reveal" style="--c:#00f5ff;border:1px solid rgba(0,245,255,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan)"></div>
+        <div class="px-corner tl"></div>
+        <div class="price-tier neon-cyan">BASIC</div>
+        <div class="price-val">Rp 25.000</div>
+        <div class="price-item" style="color:rgba(0,245,255,0.6)">1 desain poster</div>
+        <div class="price-item" style="color:rgba(0,245,255,0.6)">Konsep sederhana</div>
+        <div class="price-item" style="color:rgba(0,245,255,0.6)">1x revisi ringan</div>
+        <div class="price-item" style="color:rgba(0,245,255,0.6)">File PNG/JPG</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="border-color:rgba(0,245,255,0.4);color:var(--cyan)">ORDER PAKET INI →</a>
+      </div>
+      <div class="price-card hot reveal" style="--c:#a855f7">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--purple)"></div>
+        <div class="price-tag-hot">POPULER</div>
+        <div class="px-corner tl" style="--c:#a855f7"></div>
+        <div class="price-tier neon-purple">STANDARD</div>
+        <div class="price-val">Rp 60.000</div>
+        <div class="price-item" style="color:rgba(168,85,247,0.8)">3 desain poster</div>
+        <div class="price-item" style="color:rgba(168,85,247,0.8)">Konsep custom</div>
+        <div class="price-item" style="color:rgba(168,85,247,0.8)">3x revisi</div>
+        <div class="price-item" style="color:rgba(168,85,247,0.8)">File PNG + PSD</div>
+        <div class="price-item" style="color:rgba(168,85,247,0.8)">Cocok sosmed & shop</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="background:linear-gradient(135deg,#a855f7,#ec4899);border:none;color:#fff;box-shadow:0 0 20px rgba(168,85,247,0.4)">ORDER PAKET INI →</a>
+      </div>
+      <div class="price-card reveal" style="--c:#ec4899;border:1px solid rgba(236,72,153,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--pink)"></div>
+        <div class="px-corner tl" style="--c:#ec4899"></div>
+        <div class="price-tier neon-pink">PREMIUM</div>
+        <div class="price-val">Rp 120.000</div>
+        <div class="price-item" style="color:rgba(236,72,153,0.8)">5 desain poster</div>
+        <div class="price-item" style="color:rgba(236,72,153,0.8)">Visual kompleks</div>
+        <div class="price-item" style="color:rgba(236,72,153,0.8)">Revisi unlimited</div>
+        <div class="price-item" style="color:rgba(236,72,153,0.8)">File semua format</div>
+        <div class="price-item" style="color:rgba(236,72,153,0.8)">Cocok campaign serius</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="border-color:rgba(236,72,153,0.4);color:var(--pink)">ORDER PAKET INI →</a>
+      </div>
+    </div>
+    <div id="price-roblox" class="price-grid" style="display:none">
+      <div class="price-card reveal" style="--c:#10b981;border:1px solid rgba(16,185,129,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#10b981"></div>
+        <div class="px-corner tl" style="--c:#10b981"></div>
+        <div class="price-tier" style="color:#10b981">BASIC</div>
+        <div class="price-val">Rp 50.000</div>
+        <div class="price-item" style="color:rgba(16,185,129,0.7)">Script sederhana</div>
+        <div class="price-item" style="color:rgba(16,185,129,0.7)">GUI basic / tombol</div>
+        <div class="price-item" style="color:rgba(16,185,129,0.7)">Basic shop system</div>
+        <div class="price-item" style="color:rgba(16,185,129,0.7)">1x revisi</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="border-color:rgba(16,185,129,0.4);color:#10b981">ORDER PAKET INI →</a>
+      </div>
+      <div class="price-card hot reveal" style="--c:#facc15">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--yellow)"></div>
+        <div class="price-tag-hot">POPULER</div>
+        <div class="px-corner tl" style="--c:#facc15"></div>
+        <div class="price-tier neon-yellow">STANDARD</div>
+        <div class="price-val">Rp 120.000</div>
+        <div class="price-item" style="color:rgba(250,204,21,0.8)">Sistem gameplay menengah</div>
+        <div class="price-item" style="color:rgba(250,204,21,0.8)">Shop + leaderboard</div>
+        <div class="price-item" style="color:rgba(250,204,21,0.8)">Reward system</div>
+        <div class="price-item" style="color:rgba(250,204,21,0.8)">3x revisi</div>
+        <div class="price-item" style="color:rgba(250,204,21,0.8)">Penjelasan kode</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="background:linear-gradient(135deg,#facc15,#f97316);border:none;color:#000;box-shadow:0 0 20px rgba(250,204,21,0.4)">ORDER PAKET INI →</a>
+      </div>
+      <div class="price-card reveal" style="--c:#f97316;border:1px solid rgba(249,115,22,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#f97316"></div>
+        <div class="px-corner tl" style="--c:#f97316"></div>
+        <div class="price-tier" style="color:#f97316">PREMIUM</div>
+        <div class="price-val">Rp 250.000</div>
+        <div class="price-item" style="color:rgba(249,115,22,0.8)">Sistem custom kompleks</div>
+        <div class="price-item" style="color:rgba(249,115,22,0.8)">Inventory + economy</div>
+        <div class="price-item" style="color:rgba(249,115,22,0.8)">Custom gameplay</div>
+        <div class="price-item" style="color:rgba(249,115,22,0.8)">Revisi flexible</div>
+        <div class="price-item" style="color:rgba(249,115,22,0.8)">Full support</div>
+        <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="btn-price" style="border-color:rgba(249,115,22,0.4);color:#f97316">ORDER PAKET INI →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ PROCESS ═══════════════════════════════ -->
+<section id="process" style="background:var(--navy2);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag" style="color:#06b6d4">// ALUR ORDER</span>
+      <h2 class="section-title">Cara <span style="background:linear-gradient(135deg,#06b6d4,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Order</span></h2>
+      <p class="section-sub">Simpel, cepat, dan nggak ribet.</p>
+    </div>
+    <div class="process-wrap">
+      <div class="process-line"></div>
+      <div class="process-step reveal"><div class="process-num">01</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">📱</span><div class="process-head">Hubungi Frostxa D</div></div><p class="process-desc">Kontak via WhatsApp, Telegram, Discord, atau Email.</p></div></div>
+      <div class="process-step reveal"><div class="process-num">02</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">💬</span><div class="process-head">Diskusi Konsep</div></div><p class="process-desc">Ceritain kebutuhan kamu, kirim referensi dan detail request.</p></div></div>
+      <div class="process-step reveal"><div class="process-num">03</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">📋</span><div class="process-head">Kirim Detail</div></div><p class="process-desc">Lengkapin info: tema, warna, ukuran, teks, dan brief lainnya.</p></div></div>
+      <div class="process-step reveal"><div class="process-num">04</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">⚡</span><div class="process-head">Proses Pengerjaan</div></div><p class="process-desc">Tim Frostxa D mulai ngerjain desain atau script kamu.</p></div></div>
+      <div class="process-step reveal"><div class="process-num">05</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">🔄</span><div class="process-head">Revisi</div></div><p class="process-desc">Kalau ada yang perlu diubah, bisa langsung direvisi sesuai paket.</p></div></div>
+      <div class="process-step reveal"><div class="process-num">06</div><div class="process-body"><div class="process-icon-title"><span style="font-size:18px">🎉</span><div class="process-head">Terima Hasil Final</div></div><p class="process-desc">File final / hasil akhir dikirim. Siap dipakai!</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ TESTIMONIALS ═══════════════════════════════ -->
+<section id="testimonials" style="background:var(--navy);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag neon-pink">// TESTIMONI</span>
+      <h2 class="section-title">Yang <span style="background:linear-gradient(135deg,#f43f5e,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Mereka Bilang</span></h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal" style="border:1px solid rgba(0,245,255,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan)"></div>
+        <div class="px-corner tl"></div>
+        <div class="testi-quote neon-cyan">"</div>
+        <p class="testi-text">Desainnya keren banget, cocok banget buat promosi produk gue. Langsung banyak yang nanya beli!</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">Rizky A.</div><div class="testi-role neon-cyan">OWNER ONLINE SHOP</div>
+      </div>
+      <div class="testi-card reveal" style="border:1px solid rgba(168,85,247,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--purple)"></div>
+        <div class="px-corner tl" style="--c:#a855f7"></div>
+        <div class="testi-quote neon-purple">"</div>
+        <p class="testi-text">Poster game-nya kelihatan premium dan nggak pasaran. Beda banget sama yang lain!</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">GamerXYZ</div><div class="testi-role neon-purple">GAME COMMUNITY OWNER</div>
+      </div>
+      <div class="testi-card reveal" style="border:1px solid rgba(16,185,129,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#10b981"></div>
+        <div class="px-corner tl" style="--c:#10b981"></div>
+        <div class="testi-quote" style="color:#10b981;text-shadow:0 0 10px rgba(16,185,129,0.5)">"</div>
+        <p class="testi-text">Script Roblox-nya sesuai request dan komunikasinya enak. Fitur langsung jalan sempurna.</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">Dev_Raya</div><div class="testi-role" style="color:#10b981">ROBLOX DEVELOPER</div>
+      </div>
+      <div class="testi-card reveal" style="border:1px solid rgba(236,72,153,0.12)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--pink)"></div>
+        <div class="px-corner tl" style="--c:#ec4899"></div>
+        <div class="testi-quote neon-pink">"</div>
+        <p class="testi-text">Visualnya niat, cocok buat konten sosmed dan branding. Udah langganan terus nih!</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">Dhea K.</div><div class="testi-role neon-pink">CONTENT CREATOR</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FAQ ═══════════════════════════════ -->
+<section id="faq" style="background:var(--navy2);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div class="inner">
+    <div style="text-align:center" class="reveal">
+      <span class="section-tag" style="color:#10b981">// FAQ</span>
+      <h2 class="section-title">Pertanyaan <span style="background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Umum</span></h2>
+    </div>
+    <div class="faq-wrap">
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Berapa lama pengerjaan poster?<span class="faq-ico">+</span></button><div class="faq-a"><p>Tergantung tingkat kesulitan. Untuk paket Basic bisa 1-2 hari, Standard 2-3 hari. Bisa didiskusikan sesuai kebutuhan dan urgensi.</p></div></div>
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Apakah bisa request konsep?<span class="faq-ico">+</span></button><div class="faq-a"><p>Bisa banget! Kamu bisa kirim referensi, warna, tema, dan detail yang diinginkan. Makin detail request, makin sesuai hasilnya.</p></div></div>
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Apakah bisa revisi?<span class="faq-ico">+</span></button><div class="faq-a"><p>Bisa, jumlah revisi mengikuti paket atau kesepakatan awal. Revisi ringan biasanya bisa langsung diproses.</p></div></div>
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Apakah bisa buat poster untuk game?<span class="faq-ico">+</span></button><div class="faq-a"><p>Bisa! Termasuk poster event game, banner komunitas, thumbnail YouTube/Roblox, dan promosi turnamen game.</p></div></div>
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Apakah bisa buat script Roblox custom?<span class="faq-ico">+</span></button><div class="faq-a"><p>Bisa, mulai dari fitur sederhana sampai sistem gameplay custom sesuai kebutuhan project Roblox kamu.</p></div></div>
+      <div class="faq-item reveal"><button class="faq-q" onclick="toggleFaq(this)">Bagaimana cara order?<span class="faq-ico">+</span></button><div class="faq-a"><p>Hubungi Frostxa D lewat WhatsApp, Telegram, Discord, atau Email. WhatsApp paling cepat responnya!</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CONTACT ═══════════════════════════════ -->
+<section id="contact" style="background:var(--navy);padding:80px 0;position:relative;overflow:hidden">
+  <div class="section-grid"></div>
+  <div style="position:absolute;top:50%;left:50%;width:700px;height:700px;background:radial-gradient(circle,rgba(0,245,255,0.05),transparent 70%);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div class="inner" style="text-align:center">
+    <div class="reveal">
+      <span class="section-tag neon-cyan">// KONTAK</span>
+      <h2 class="section-title">Siap Bikin Visual Brand<br/>Kamu Lebih <span class="grad-text">Keren?</span></h2>
+      <p class="section-sub" style="margin:0 auto 40px">Order poster sosial media, poster online shop, poster game, atau script Roblox custom langsung lewat kontak Frostxa D.</p>
+    </div>
+    <div class="contact-cards reveal">
+      <div class="contact-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#25d366"></div>
+        <div class="px-corner tl" style="--c:#25d366"></div>
+        <span class="contact-icon">💬</span>
+        <div class="contact-label">WhatsApp</div>
+        <div class="contact-val" style="color:#25d366">085695115905</div>
+        <div class="contact-hint">PALING CEPAT RESPONS</div>
+        <a href="https://wa.me/6285695115905" target="_blank" class="btn-contact" style="border-color:rgba(37,211,102,0.4);color:#25d366;--c:#25d366">BUKA →</a>
+      </div>
+      <div class="contact-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#29a8eb"></div>
+        <div class="px-corner tl" style="--c:#29a8eb"></div>
+        <span class="contact-icon">✈️</span>
+        <div class="contact-label">Telegram</div>
+        <div class="contact-val" style="color:#29a8eb">@Frostxa1</div>
+        <div class="contact-hint">CHAT LANGSUNG</div>
+        <a href="https://t.me/Frostxa1" target="_blank" class="btn-contact" style="border-color:rgba(41,168,235,0.4);color:#29a8eb;--c:#29a8eb">BUKA →</a>
+      </div>
+      <div class="contact-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#5865f2"></div>
+        <div class="px-corner tl" style="--c:#5865f2"></div>
+        <span class="contact-icon">🎮</span>
+        <div class="contact-label">Discord</div>
+        <div class="contact-val" style="color:#5865f2">@frostevill</div>
+        <div class="contact-hint">COPY USERNAME</div>
+        <button class="btn-contact" id="discord-btn" onclick="copyDiscord()" style="border-color:rgba(88,101,242,0.4);color:#5865f2;--c:#5865f2">COPY USERNAME</button>
+      </div>
+      <div class="contact-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#ea4335"></div>
+        <div class="px-corner tl" style="--c:#ea4335"></div>
+        <span class="contact-icon">📧</span>
+        <div class="contact-label">Email</div>
+        <div class="contact-val" style="color:#ea4335;font-size:10px">frostxa60@gmail.com</div>
+        <div class="contact-hint">BRIEF FORMAL</div>
+        <a href="mailto:frostxa60@gmail.com" class="btn-contact" style="border-color:rgba(234,67,53,0.4);color:#ea4335;--c:#ea4335">KIRIM EMAIL</a>
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:12px">
+      <a href="https://wa.me/6285695115905?text=Halo%20Frostxa%20D%2C%20saya%20mau%20order%20jasa" target="_blank" class="cta-big">⚡ ORDER SEKARANG via WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer>
+  <div class="section-grid"></div>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo-wrap">
+        <div class="nav-logo-px">F</div>
+        <span style="font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;letter-spacing:2px">FROSTXA <span class="neon-cyan">D</span></span>
+      </div>
+      <p class="footer-brand-desc">Brand kreatif digital untuk poster visual premium dan script Roblox custom. Visual yang niat, hasil yang memuaskan.</p>
+      <div class="footer-social">
+        <a href="https://wa.me/6285695115905" target="_blank" class="footer-soc-btn">💬</a>
+        <a href="https://t.me/Frostxa1" target="_blank" class="footer-soc-btn">✈️</a>
+        <a href="mailto:frostxa60@gmail.com" class="footer-soc-btn">📧</a>
+      </div>
+    </div>
+    <div>
+      <span class="footer-col-title">LAYANAN</span>
+      <button class="footer-link" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">Poster Sosial Media</button>
+      <button class="footer-link" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">Poster Online Shop</button>
+      <button class="footer-link" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">Poster Game</button>
+      <button class="footer-link" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">Script Roblox</button>
+    </div>
+    <div>
+      <span class="footer-col-title">PORTFOLIO</span>
+      <button class="footer-link" onclick="document.getElementById('portfolio-grid').scrollIntoView({behavior:'smooth'})">Featured Work</button>
+      <button class="footer-link" onclick="filterPortfolio('social',null);document.getElementById('portfolio-grid').scrollIntoView({behavior:'smooth'})">Social Media</button>
+      <button class="footer-link" onclick="filterPortfolio('game',null);document.getElementById('portfolio-grid').scrollIntoView({behavior:'smooth'})">Game Poster</button>
+      <button class="footer-link" onclick="filterPortfolio('roblox',null);document.getElementById('portfolio-grid').scrollIntoView({behavior:'smooth'})">Roblox Script</button>
+    </div>
+    <div>
+      <span class="footer-col-title">INFO</span>
+      <button class="footer-link" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">About</button>
+      <button class="footer-link" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Pricing</button>
+      <button class="footer-link" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'})">FAQ</button>
+      <button class="footer-link" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Contact</button>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 FROSTXA D. ALL RIGHTS RESERVED.</span>
+    <span class="footer-copy">MADE WITH ❤️ BY FROSTXA D</span>
+  </div>
+</footer>
+
+<script>
+// ── PIXEL PARTICLE CANVAS ──────────────────────────────────────────────────
+const canvas = document.getElementById('pixel-canvas');
+const ctx = canvas.getContext('2d');
+const COLORS = ['#00f5ff','#a855f7','#ec4899','#facc15','#10b981','#f97316'];
+let W, H, particles = [];
+
+function resizeCanvas(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initParticles(){
+  particles = [];
+  const count = Math.floor(W/25);
+  for(let i=0;i<count;i++){
+    particles.push({
+      x:Math.random()*W, y:Math.random()*H,
+      size:Math.random()<0.3 ? 4 : Math.random()<0.6 ? 2 : 1,
+      color:COLORS[Math.floor(Math.random()*COLORS.length)],
+      vx:(Math.random()-0.5)*0.4,
+      vy:(Math.random()-0.5)*0.4 - 0.1,
+      alpha:Math.random()*0.7+0.2,
+      life:Math.random()*200,
+      maxLife:150+Math.random()*200,
+      twinkle:Math.random()*Math.PI*2,
+      twinkleSpeed:0.02+Math.random()*0.03,
+    });
+  }
+}
+
+let scrollY = 0;
+window.addEventListener('scroll',()=>{ scrollY = window.scrollY; });
+
+function drawParticles(){
+  ctx.clearRect(0,0,W,H);
+  const t = Date.now()*0.001;
+  particles.forEach(p=>{
+    p.life++;
+    p.twinkle += p.twinkleSpeed;
+    p.x += p.vx;
+    p.y += p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    const a = p.alpha * (0.6 + 0.4*Math.sin(p.twinkle));
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = p.size*3;
+    const s = p.size;
+    ctx.fillRect(Math.floor(p.x),Math.floor(p.y),s,s);
+    // occasionally draw a plus pixel
+    if(p.size>=4){
+      ctx.globalAlpha = a*0.5;
+      ctx.fillRect(Math.floor(p.x)+s,Math.floor(p.y),s/2,s/2);
+      ctx.fillRect(Math.floor(p.x)-s/2,Math.floor(p.y),s/2,s/2);
+    }
+  });
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+  requestAnimationFrame(drawParticles);
+}
+
+resizeCanvas(); initParticles(); drawParticles();
+window.addEventListener('resize',()=>{ resizeCanvas(); initParticles(); });
+
+// ── CUSTOM CURSOR ──────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let cx=0, cy=0, rx=0, ry=0;
+document.addEventListener('mousemove',e=>{
+  cx=e.clientX; cy=e.clientY;
+  cursor.style.left=cx+'px'; cursor.style.top=cy+'px';
+});
+function animRing(){
+  rx += (cx-rx)*0.12;
+  ry += (cy-ry)*0.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a,button,.pf-card,.svc-card,.tilt').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{
+    cursor.style.width='20px'; cursor.style.height='20px';
+    cursor.style.background='#a855f7';
+    ring.style.width='50px'; ring.style.height='50px';
+    ring.style.borderColor='rgba(168,85,247,0.6)';
+  });
+  el.addEventListener('mouseleave',()=>{
+    cursor.style.width='12px'; cursor.style.height='12px';
+    cursor.style.background='var(--cyan)';
+    ring.style.width='32px'; ring.style.height='32px';
+    ring.style.borderColor='rgba(0,245,255,0.4)';
+  });
+});
+
+// ── NAVBAR SCROLL ──────────────────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll',()=>{
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── HERO LOAD ANIMATION ────────────────────────────────────────────────────
+const heroEls = ['hero-badge','hero-title','hero-sub','hero-desc','hero-btns','cards-stage','scroll-ind'];
+heroEls.forEach((id,i)=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition=`opacity 0.7s ease, transform 0.7s ease`;
+  setTimeout(()=>{ el.style.opacity='1'; el.style.transform='none'; }, 200+i*120);
+});
+
+// ── FLOATING CARDS PARALLAX ────────────────────────────────────────────────
+const cards = [
+  {el:document.getElementById('fc1'), ox:-210, oy:-30, rot:-8},
+  {el:document.getElementById('fc2'), ox:0, oy:-80, rot:0},
+  {el:document.getElementById('fc3'), ox:210, oy:-30, rot:8},
+  {el:document.getElementById('fc4'), ox:-100, oy:80, rot:-5},
+  {el:document.getElementById('fc5'), ox:100, oy:80, rot:5},
+];
+const floatOffsets = cards.map((_,i)=>({phase:i*1.2, speed:2.5+i*0.4}));
+let mx=0, my=0;
+document.addEventListener('mousemove',e=>{
+  mx=(e.clientX/window.innerWidth-0.5)*22;
+  my=(e.clientY/window.innerHeight-0.5)*14;
+});
+
+let fTime = 0;
+function animCards(){
+  fTime += 0.012;
+  cards.forEach((c,i)=>{
+    if(!c.el) return;
+    const fy = Math.sin(fTime+floatOffsets[i].phase)*10;
+    const fx = Math.cos(fTime*0.7+floatOffsets[i].phase)*4;
+    const px = c.ox + mx*(1-i*0.1) + fx;
+    const py = c.oy + my*(1-i*0.08) + fy;
+    c.el.style.transform=`translate(-50%,-50%) translateX(${px}px) translateY(${py}px) rotate(${c.rot}deg)`;
+    // neon glow pulse
+    const g = 0.5+0.5*Math.sin(fTime*2+i);
+    const color = ['rgba(0,245,255','rgba(168,85,247','rgba(250,204,21','rgba(236,72,153','rgba(249,115,22'][i];
+    c.el.style.boxShadow=`0 0 ${12+g*16}px ${color},0.${2+Math.round(g*3)})`;
+  });
+  requestAnimationFrame(animCards);
+}
+animCards();
+
+// ── SCROLL REVEAL ──────────────────────────────────────────────────────────
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const delay = parseInt(e.target.dataset.delay||0);
+      setTimeout(()=>{ e.target.classList.add('visible'); }, delay);
+      revealObs.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+reveals.forEach(r=>revealObs.observe(r));
+
+// Stagger child cards
+document.querySelectorAll('.svc-grid, .pgrid, .price-grid, .testi-grid, .why-grid, .contact-cards').forEach(grid=>{
+  Array.from(grid.children).forEach((child,i)=>{
+    if(!child.classList.contains('reveal')) child.classList.add('reveal');
+    child.dataset.delay = i*80;
+    revealObs.observe(child);
+  });
+});
+
+// ── PARALLAX GRIDS ─────────────────────────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  const sy = window.scrollY;
+  document.querySelectorAll('.section-grid').forEach((g,i)=>{
+    const offset = sy*0.03*(i%2===0?1:-1);
+    g.style.transform=`translateY(${offset}px)`;
+  });
+  document.querySelectorAll('.hero-glow-1,.hero-glow-2,.hero-glow-3').forEach((g,i)=>{
+    const speed = 0.08+i*0.04;
+    g.style.transform=`${i===2?'translate(-50%,-50%) ':''} translateY(${sy*speed}px)`;
+  });
+  document.querySelectorAll('.px-art-wrap').forEach((g,i)=>{
+    const speed = 0.06+i*0.03;
+    const base = g.style.animation;
+    g.style.transform=`translateY(${-sy*speed}px)`;
+  });
+});
+
+// ── TILT CARDS ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.pcard,.svc-card,.pf-card,.price-card,.why-card,.testi-card,.contact-card,.process-body,.skill-card').forEach(el=>{
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-0.5;
+    const y=(e.clientY-r.top)/r.height-0.5;
+    el.style.transform=`perspective(600px) rotateY(${x*12}deg) rotateX(${-y*12}deg) translateY(-4px)`;
+    el.style.transition='transform 0.1s ease';
+  });
+  el.addEventListener('mouseleave',()=>{
+    el.style.transform='';
+    el.style.transition='transform 0.4s ease';
+  });
+});
+
+// ── GLITCH EFFECT ─────────────────────────────────────────────────────────
+const glitch = document.getElementById('glitch-text');
+setInterval(()=>{
+  glitch.style.animation='glitch 0.3s steps(1) 1';
+  setTimeout(()=>{ glitch.style.animation=''; }, 300);
+}, 4000+Math.random()*3000);
+
+// ── PORTFOLIO FILTER ───────────────────────────────────────────────────────
+function filterPortfolio(cat, btn){
+  if(btn){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  document.querySelectorAll('.pf-card').forEach(card=>{
+    if(cat==='all'||card.dataset.cat===cat){
+      card.style.display='';
+      setTimeout(()=>{ card.style.opacity='1'; card.style.transform='none'; },50);
+    } else {
+      card.style.opacity='0';
+      card.style.transform='scale(0.9)';
+      setTimeout(()=>{ card.style.display='none'; },300);
+    }
+  });
+}
+
+// ── PRICING TAB ────────────────────────────────────────────────────────────
+function switchPricing(tab, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('price-poster').style.display = tab==='poster'?'grid':'none';
+  document.getElementById('price-roblox').style.display = tab==='roblox'?'grid':'none';
+}
+
+// ── FAQ TOGGLE ─────────────────────────────────────────────────────────────
+function toggleFaq(btn){
+  const ans = btn.nextElementSibling;
+  const ico = btn.querySelector('.faq-ico');
+  const isOpen = ans.classList.contains('open');
+  document.querySelectorAll('.faq-a.open').forEach(a=>{
+    a.classList.remove('open');
+    a.previousElementSibling.classList.remove('open');
+    a.previousElementSibling.querySelector('.faq-ico').classList.remove('open');
+  });
+  if(!isOpen){
+    ans.classList.add('open');
+    btn.classList.add('open');
+    ico.classList.add('open');
+  }
+}
+
+// ── DISCORD COPY ───────────────────────────────────────────────────────────
+function copyDiscord(){
+  navigator.clipboard.writeText('@frostevill').then(()=>{
+    const btn = document.getElementById('discord-btn');
+    const orig = btn.textContent;
+    btn.textContent='✓ COPIED!';
+    btn.style.color='#10b981';
+    btn.style.borderColor='rgba(16,185,129,0.5)';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color='#5865f2'; btn.style.borderColor='rgba(88,101,242,0.4)'; },2000);
+  });
+}
+
+// ── COUNTER ANIMATION ──────────────────────────────────────────────────────
+function animCounter(el, target, suffix=''){
+  let n=0;
+  const step = Math.ceil(target/40);
+  const timer = setInterval(()=>{
+    n = Math.min(n+step, target);
+    el.textContent = n + suffix;
+    if(n>=target) clearInterval(timer);
+  }, 30);
+}
+const statsObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      animCounter(e.target, 50, '+');
+      statsObs.unobserve(e.target);
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.stat-num').forEach(el=>{
+  if(el.textContent.includes('+')) statsObs.observe(el);
+});
+
+// ── SCAN LINE PARALLAX ─────────────────────────────────────────────────────
+const scanEl = document.querySelector('.scanline-move');
+if(scanEl){
+  setInterval(()=>{
+    scanEl.style.animation='none';
+    void scanEl.offsetWidth;
+    scanEl.style.animation='scanline 5s linear infinite';
+  },5000);
+}
+
+// ── PIXEL RIPPLE on click ──────────────────────────────────────────────────
+document.addEventListener('click',e=>{
+  const ripple = document.createElement('div');
+  ripple.style.cssText=`
+    position:fixed;left:${e.clientX-2}px;top:${e.clientY-2}px;
+    width:4px;height:4px;background:#00f5ff;
+    box-shadow:0 0 8px #00f5ff;pointer-events:none;z-index:9999;
+    animation:none;image-rendering:pixelated;
+  `;
+  document.body.appendChild(ripple);
+  let frame=0, size=4, alpha=1;
+  function expand(){
+    size+=6; alpha-=0.08;
+    if(alpha<=0){ ripple.remove(); return; }
+    ripple.style.width=size+'px';
+    ripple.style.height=size+'px';
+    ripple.style.left=(e.clientX-size/2)+'px';
+    ripple.style.top=(e.clientY-size/2)+'px';
+    ripple.style.opacity=alpha;
+    ripple.style.boxShadow=`0 0 ${size/2}px #00f5ff`;
+    requestAnimationFrame(expand);
+  }
+  requestAnimationFrame(expand);
+});
+</script>
+</body>
+</html>
